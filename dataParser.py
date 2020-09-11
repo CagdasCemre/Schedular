@@ -1,6 +1,8 @@
 #Çağdaş Cemre Yurtsuz
 
 import pandas as pd
+from NE_Obj import network_element
+
 
 class dataParser:
 
@@ -17,31 +19,30 @@ class dataParser:
 
 
 
-    def parse(self, file):
+    def parse(self):
         '''
         This method takes all the data, put it in a pandas dataframe
         and organizes the dataframe into a python dictionary (I don't trust dataframes).
         '''
-        all_rec = dict()
-        self.df = pd.read_csv(self.file)
-
+        
+        df = pd.read_csv(self.file, low_memory=False)
+        all_rec = [network_element() for _ in range (len(df.index))]
         
 
 
         #print(len(df.index))
-        
-        for col in self.df.columns:
-            all_rec[col] = list()
 
 
-        for i in range(len(self.df.index)):
+        for i in range(len(df.index)):
 
-            for col in all_rec.keys():
-                all_rec[col].append(self.df[col][i])
-                
-
-
-        return  all_rec, len(self.df.index)
+            all_rec[i].region = df['region'][i]
+            all_rec[i].site = df['site'][i]
+            all_rec[i].dayVol = df['dayVol'][i]
+            all_rec[i].priority = df['priority'][i]
+            all_rec[i].groupID = df['groupID'][i]            
+            all_rec[i].status = df['status'][i]
+            
+        return  all_rec, len(df.index)
 
 
     def write(self, weekly_plan, clusterIndex, weekIndex, nCount):

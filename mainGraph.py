@@ -4,7 +4,7 @@ from dataParser import dataParser
 import time
 from digraph import Digraph
 import sys
-
+from math import isnan
 
 print(sys.getrecursionlimit())
 sys.setrecursionlimit(3000) #Increase recursion limit for dfs
@@ -30,11 +30,13 @@ print('Creating corequisite udgraph..')
 coGraph = Digraph(nCount) #Instantiate corequisite graph
 marked = [False for i in range(nCount)]
 for i in range(nCount):
+
     if not marked[i]:
+
         for j in range(i+1, nCount):
             
-            if all_rec['CLUSTER_LEVEL'][i] == 'YES' and all_rec['CLUSTER_LEVEL'][i] == all_rec['CLUSTER_LEVEL'][j]:
-               if all_rec['CLUSTERID'][i] == all_rec['CLUSTERID'][j] and all_rec['GROUP_ID'][i] == all_rec['GROUP_ID'][j]:
+            if not (isnan(all_rec[i].groupID) and isnan(all_rec[j].groupID)):
+               if all_rec[i].region == all_rec[j].region and isnan(all_rec[i].groupID == isnan(all_rec[j].groupID:
                    marked[j] = True 
                    coGraph.add_edge(i, j)
                    coGraph.add_edge(j, i)
@@ -57,7 +59,7 @@ for clust in clusterList:
     total = 0
 
     for job in clust:
-        total += all_rec['COST'][job]
+        total += all_rec[job].dayVol
     
     clusterCost.append(total / len(clust))
 print("---Done in %s seconds! ---" % (time.time() - start_time))
