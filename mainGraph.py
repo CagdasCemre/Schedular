@@ -12,7 +12,7 @@ sys.setrecursionlimit(3000) #Increase recursion limit for dfs
 total_time = time.time()
 
 
-file = 'Recommendations.csv' #Source file for Recommendation
+file = 'P2_SNP_Recommendations_revised.csv' #Source file for Recommendation
 parser = dataParser(file)
 
 start_time = time.time()
