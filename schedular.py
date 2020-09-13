@@ -209,4 +209,5 @@ def schedular(recommendations, startDate, endDate)
 
     print("---Total %s seconds! ---" % (time.time() - total_time))
 
+    return all_rec
 
