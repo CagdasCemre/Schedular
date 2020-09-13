@@ -17,7 +17,7 @@ parser = dataParser(file)
 
 start_time = time.time()
 print('Parsing data..')
-all_rec,  nCount = parser.parse(file) #Parse the data inside the csv file, return dictionary with same data and number of actions
+all_rec,  nCount = parser.parse() #Parse the data inside the csv file, return dictionary with same data and number of actions
 print("---Done in %s seconds! ---" % (time.time() - start_time))
 
 
@@ -32,14 +32,17 @@ marked = [False for i in range(nCount)]
 for i in range(nCount):
 
     if not marked[i]:
-
-        for j in range(i+1, nCount):
-            
-            if not (isnan(all_rec[i].groupID) and isnan(all_rec[j].groupID)):
-               if all_rec[i].region == all_rec[j].region and isnan(all_rec[i].groupID == isnan(all_rec[j].groupID:
-                   marked[j] = True 
-                   coGraph.add_edge(i, j)
-                   coGraph.add_edge(j, i)
+        if not isnan(all_rec[i].groupID):
+        
+            for j in range(i+1, nCount):
+                
+                if all_rec[j].groupID is not None:
+                   if all_rec[i].region == all_rec[j].region and all_rec[i].groupID == all_rec[j].groupID:
+                       marked[j] = True 
+                       coGraph.add_edge(i, j)
+                       coGraph.add_edge(j, i)
+                else:
+                    marked[j] = True 
              
 print("---Done in %s seconds! ---" % (time.time() - start_time))
 
@@ -76,16 +79,16 @@ for i in range(nCount):
     
     for j in range(i+1, nCount):
         
-        if all_rec['SITE'][i] == all_rec['SITE'][j]:
+        if all_rec[i].site == all_rec[j].site:
 
-            if all_rec['PRIORITY'][i] < all_rec['PRIORITY'][j]:
+            if all_rec[i].priority < all_rec[j].priority:
                 
                 graph.add_edge(clusterIndex[j], clusterIndex[i])
                 preqCounter[clusterIndex[j]] += 1
                 
  
 
-            elif all_rec['PRIORITY'][i] == all_rec['PRIORITY'][j]:
+            elif all_rec[i].priority == all_rec[j].priority:
 
                 if clusterCost[clusterIndex[i]] > clusterCost[clusterIndex[j]] :
                     
@@ -127,7 +130,14 @@ Each cluster is put as a whole into the week.
 Maximum jobs that can be put into a week is limited with max job count in all of the clusters(For uniformity)
 Maximum cluster per week is calculated according to total equal distribution of total cluster count between weeks(For uniformity)
 '''
-weekLim = 52
+startDate = '2021-01'
+endDate = '2022-52'
+
+startDate = dataParser.dateParser(startDate)
+endDate = dataParser.dateParser(endDate)
+
+
+weekLim = (endDate[0] - startDate[0]) * 52 + (endDate[1] - startDate[1] + 1)
 
 weeks = [[] for _ in range(weekLim)] #Actual plan of, has the indexes of each action in each week
 weekIndex = [0 for _ in range(len(clusterList))] #Opposite of weeks list.
@@ -153,8 +163,8 @@ for week in weeks:
     
     for i in order:
        
-
-        if preqCounter[i] != -1 and preqCounter[i] == 0:
+        
+        if preqCounter[i] != -1 and preqCounter[i] == 0 :
 
             if jLim <= 0 or clusterPerWeek <= 0 or jLim < len(clusterList[i]) :
                 break
@@ -185,7 +195,7 @@ print("---Done in %s seconds ---" % (time.time() - start_time))
 
 start_time = time.time()
 print('Writing to excel..')
-parser.write(weeks, clusterIndex, weekIndex, nCount) #Write back to excel file
+parser.write(weeks, startDate) #Write back to excel file
 print("---Done in %s seconds ---" % (time.time() - start_time))  
 
 for week in weeks:
