@@ -139,7 +139,7 @@ def schedular(recommendations, startDate, endDate)
     weekLim = (endDate[0] - startDate[0]) * 52 + (endDate[1] - startDate[1] + 1)
 
     weeks = [[] for _ in range(weekLim)] #Actual plan of, has the indexes of each action in each week
-    weekIndex = [0 for _ in range(len(clusterList))] #Opposite of weeks list.
+
 
     maxjPerWeek = max([len(cluster) for cluster in clusterList]) #Maximum job amount per week
     avgJPerWeek = int(nCount / weekLim) #Average job per week
@@ -168,7 +168,7 @@ def schedular(recommendations, startDate, endDate)
                 if jLim <= 0 or clusterPerWeek <= 0 or jLim < len(clusterList[i]) :
                     break
 
-                weekIndex[i] = weekNo
+
                 week.extend(clusterList[i])
                 jLim -= len(clusterList[i])
                 preqCounter[i] = -1
@@ -196,9 +196,9 @@ def schedular(recommendations, startDate, endDate)
     print('Writing to excel..')
     i = 1
     for week in weekly_plan:
-
-        for job in week:
-            all_rec[job].updRolloutDate = f'{startDate[0]}-{i}'
+        for cluster in week:
+            for job in clusterList[cluster]:
+                all_rec[job].updRolloutDate = f'{startDate[0]}-{i}'
 
         if i % 52 == 0:
             startDate[0] += 1
