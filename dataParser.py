@@ -6,24 +6,32 @@ from math import isnan
 
 class dataParser:
 
+
+    def __init__(self):
+        pass
+     
+
+    def dateParser(date):
+        #Split the date components into yy-ww
+        spltDate = date.split('-')
+       
+
+        date = list()
+        
+
+        
+        for i in spltDate:
+            date.append(int(i))
+            
+
+        return date
+
+
+
+
     '''
-    This class uses pandas module to I/O operations on excel.
-    '''
-    def __init__(self, file):
-
-       '''
-       Constructer takes a file path and initializes it. 
-       '''
-       self.file = file
-
-
-
-
     def parse(self):
-        '''
-        This method takes all the data, put it in a pandas dataframe
-        and organizes the dataframe into a python dictionary (I don't trust dataframes).
-        '''
+      
         
         self.df = pd.read_csv(self.file, low_memory=False)
         self.all_rec = list()
@@ -56,15 +64,12 @@ class dataParser:
 
             
         return  self.all_rec, nCount
-
-
+        '''
+    '''
     def write(self, weekly_plan, startDate):
         # Create a Pandas dataframe from the data.
 
-        '''
-        This method creates an excel file named RecommendationPlan.xlsx
-        and inserts the organised weekly plan into it.
-        '''
+        
         
         s = list()
 
@@ -86,19 +91,6 @@ class dataParser:
 
         self.df.to_excel(writer, index=True)
         wb.save('RecommendationPlan.xlsx')
-
-        
-    def dateParser(date):
-        #Split the date components into yy-ww
-        spltDate = date.split('-')
-       
-
-        date = list()
+        '''
         
 
-        
-        for i in spltDate:
-            date.append(int(i))
-            
-
-        return date
