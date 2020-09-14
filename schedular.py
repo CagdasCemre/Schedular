@@ -1,27 +1,24 @@
 #Çağdaş Cemre Yurtsuz
 
-from dataParser import dateParser
 import time
 from digraph import Digraph
 import sys
 from math import isnan
 
 
-def schedular(recommendations, startDate, endDate)
+def schedular(recommendations, processInterval):
 
     sys.setrecursionlimit(3000) #Increase recursion limit for dfs
 
     total_time = time.time()
+    all_rec = list()
 
 
-    '''
-    PUT network_objects
-    in all_rec
+    for recom in recommendations:
+        if recom.status == 'Optional':
+            all_rec.append(recom)
+
     nCount = len(all_rec)
-    '''
-
-
-
 
 
     start_time = time.time()
@@ -32,7 +29,7 @@ def schedular(recommendations, startDate, endDate)
     for i in range(nCount):
 
         if not marked[i]:
-            if not isnan(all_rec[i].groupID):
+            if all_rec[i].groupID is not None:
             
                 for j in range(i+1, nCount):
                     
@@ -62,7 +59,8 @@ def schedular(recommendations, startDate, endDate)
         total = 0
 
         for job in clust:
-            total += all_rec[job].dayVol
+            if all_rec[job].dayVol is not None:
+                total += all_rec[job].dayVol
         
         clusterCost.append(total / len(clust))
     print("---Done in %s seconds! ---" % (time.time() - start_time))
@@ -73,42 +71,43 @@ def schedular(recommendations, startDate, endDate)
     graph = Digraph(len(clusterList)) #Instantiate prerequisites between clusters with given constraints. 
     preqCounter = [0 for _ in range(len(clusterList))]
 
-    optional = list()
+    
     for i in range(nCount):
 
-        
-        for j in range(i+1, nCount):
-            
-            if all_rec[i].site == all_rec[j].site:
+        if all_rec[i].priority != -1:
+            for j in range(i+1, nCount):
 
-                if all_rec[i].priority < all_rec[j].priority:
-                    
-                    graph.add_edge(clusterIndex[j], clusterIndex[i])
-                    preqCounter[clusterIndex[j]] += 1
-                    
-     
+                if all_rec[j].priority != -1:
+                    if all_rec[i].site == all_rec[j].site:
 
-                elif all_rec[i].priority == all_rec[j].priority:
+                        if all_rec[i].priority < all_rec[j].priority:
+                            
+                            graph.add_edge(clusterIndex[j], clusterIndex[i])
+                            preqCounter[clusterIndex[j]] += 1
+                            
+             
 
-                    if clusterCost[clusterIndex[i]] > clusterCost[clusterIndex[j]] :
+                        elif all_rec[i].priority == all_rec[j].priority:
+
+                            if clusterCost[clusterIndex[i]] > clusterCost[clusterIndex[j]] :
+                                
+                                graph.add_edge(clusterIndex[j], clusterIndex[i])
+                                preqCounter[clusterIndex[j]] += 1
+                            
+
+                                
+                            elif clusterCost[clusterIndex[i]]  < clusterCost[clusterIndex[j]] :
+                                
+                                graph.add_edge(clusterIndex[i], clusterIndex[j])
+                                preqCounter[clusterIndex[i]] += 1
+                            
+
+
+                        else:
+                            
+                            graph.add_edge(clusterIndex[i], clusterIndex[j])
+                            preqCounter[clusterIndex[i]] += 1
                         
-                        graph.add_edge(clusterIndex[j], clusterIndex[i])
-                        preqCounter[clusterIndex[j]] += 1
-                    
-
-                        
-                    elif clusterCost[clusterIndex[i]]  < clusterCost[clusterIndex[j]] :
-                        
-                        graph.add_edge(clusterIndex[i], clusterIndex[j])
-                        preqCounter[clusterIndex[i]] += 1
-                    
-
-
-                else:
-                    
-                    graph.add_edge(clusterIndex[i], clusterIndex[j])
-                    preqCounter[clusterIndex[i]] += 1
-                    
                    
                     
     print("---Done in %s seconds ---" % (time.time() - start_time))
@@ -132,11 +131,9 @@ def schedular(recommendations, startDate, endDate)
     '''
 
 
-    startDate = dateParser(startDate)
-    endDate = dateParser(endDate)
 
 
-    weekLim = (endDate[0] - startDate[0]) * 52 + (endDate[1] - startDate[1] + 1)
+    weekLim = len(processInterval)
 
     weeks = [[] for _ in range(weekLim)] #Actual plan of, has the indexes of each action in each week
 
@@ -192,19 +189,25 @@ def schedular(recommendations, startDate, endDate)
     print("---Done in %s seconds ---" % (time.time() - start_time))            
 
 
+    '''
+    for week in weeks:
+        print(len(week))
+    '''
+
     start_time = time.time()
-    print('Writing to excel..')
-    i = 1
-    for week in weekly_plan:
-        for cluster in week:
-            for job in clusterList[cluster]:
-                all_rec[job].updRolloutDate = f'{startDate[0]}-{i}'
+    print('Writing to network elements..')
 
-        if i % 52 == 0:
-            startDate[0] += 1
-            i = 0
-
+    i = 0
+    for week in weeks:
+        for job in week:
+            all_rec[job].updRolloutDate = processInterval[i] 
+                
         i += 1
+
+    for recom in recommendations:
+        if recom.status == 'Approved':
+            all_rec.append(recom)
+
     print("---Done in %s seconds ---" % (time.time() - start_time))  
 
     print("---Total %s seconds! ---" % (time.time() - total_time))
