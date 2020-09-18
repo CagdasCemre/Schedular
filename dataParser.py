@@ -1,7 +1,7 @@
 #Çağdaş Cemre Yurtsuz
 
 import pandas as pd
-from NE_Obj import network_element
+from SNP_Lib.PE import network_element
 from math import isnan
 
 class dataParser:
@@ -29,11 +29,11 @@ class dataParser:
 
 
 
-    '''
-    def parse(self):
+    
+    def parse(self, file):
       
         
-        self.df = pd.read_csv(self.file, low_memory=False)
+        self.df = pd.read_csv(file, low_memory=False)
         self.all_rec = list()
 
         
@@ -45,26 +45,26 @@ class dataParser:
         for i in range(len(self.df.index)):
 
             
-            if self.df['status'][i] != 'Approved':
+
                 
-                newObj = network_element()
-                newObj.region = self.df['region'][i]
-                newObj.site = self.df['site'][i]
-                newObj.dayVol = self.df['dayVol'][i]
+              newObj = network_element()
+              newObj.region = self.df['region'][i]
+              newObj.site = self.df['site'][i]
+              newObj.status = self.df['status'][i]      
 
-                if newObj.dayVol is None:
-                    newObj.dayVol = 0   
-                    
-                newObj.priority = self.df['priority'][i]
-                newObj.groupID = self.df['groupID'][i]            
-                nCount += 1
-
-                self.indMap.append(i)
-                self.all_rec.append(newObj)
+              if self.df['dayVol'][i] is not None:
+                 newObj.dayVol = self.df['dayVol'][i]
+                        
+              newObj.priority = self.df['priority'][i]
+              newObj.groupID = self.df['groupID'][i]            
+              nCount += 1
+                
+              
+              self.all_rec.append(newObj)
 
             
         return  self.all_rec, nCount
-        '''
+        
     '''
     def write(self, weekly_plan, startDate):
         # Create a Pandas dataframe from the data.
