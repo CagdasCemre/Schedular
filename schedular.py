@@ -6,7 +6,7 @@ import sys
 from math import isnan
 
 
-def schedular(recommendations, processInterval):
+def schedular(recommendations, processInterval, costLim):
 
     sys.setrecursionlimit(3000) #Increase recursion limit for dfs
 
@@ -53,16 +53,19 @@ def schedular(recommendations, processInterval):
 
     start_time = time.time()
     print('Calculating cluster avg. cost in coGraph..')
-    clusterCost = [0 for _ in range(len(clusterList))] #Calculate each cluster's average cost
-
+    clusterAvgCost = list() #Calculate each cluster's average cost
+    clusterCost = list() #Calculate each cluster's total cost
+    
     for clust in clusterList:
         total = 0
 
         for job in clust:
-            if all_rec[job].dayVol is not None:
+            if all_rec[job].dayVol is not None and not isnan(all_rec[job].dayVol):
                 total += all_rec[job].dayVol
-        
-        clusterCost.append(total / len(clust))
+                
+        clusterCost.append(total)
+        clusterAvgCost.append(total / len(clust))
+    
     print("---Done in %s seconds! ---" % (time.time() - start_time))
 
     start_time = time.time()
@@ -89,14 +92,14 @@ def schedular(recommendations, processInterval):
 
                         elif all_rec[i].priority == all_rec[j].priority:
 
-                            if clusterCost[clusterIndex[i]] > clusterCost[clusterIndex[j]] :
+                            if clusterAvgCost[clusterIndex[i]] > clusterAvgCost[clusterIndex[j]] :
                                 
                                 graph.add_edge(clusterIndex[j], clusterIndex[i])
                                 preqCounter[clusterIndex[j]] += 1
                             
 
                                 
-                            elif clusterCost[clusterIndex[i]]  < clusterCost[clusterIndex[j]] :
+                            elif clusterAvgCost[clusterIndex[i]]  < clusterAvgCost[clusterIndex[j]] :
                                 
                                 graph.add_edge(clusterIndex[i], clusterIndex[j])
                                 preqCounter[clusterIndex[i]] += 1
@@ -131,79 +134,99 @@ def schedular(recommendations, processInterval):
     '''
 
 
-
-
+    temp_order = list()
+    totalCost = 0
+    for i in order:
+        if totalCost + clusterCost[i] <= costLim:
+            temp_order.append(i)
+            totalCost += clusterCost[i]
+        else:
+            break
+            
+    order = temp_order
+    
     weekLim = len(processInterval)
 
     weeks = [[] for _ in range(weekLim)] #Actual plan of, has the indexes of each action in each week
 
 
-    maxjPerWeek = max([len(cluster) for cluster in clusterList]) #Maximum job amount per week
-    avgJPerWeek = int(nCount / weekLim) #Average job per week
+    cToProcess  = list()
+    for i in order:
+        cToProcess.append(clusterList[i])
+
+    if len(cToProcess) > 0:
+        jAmountToProcess = 0
+        for cluster in cToProcess:
+            jAmountToProcess += len(cluster)
+
+        maxjPerWeek = max([len(cluster) for cluster in cToProcess]) #Maximum job amount per week
+        avgJPerWeek = int(jAmountToProcess / weekLim) #Average job per week
 
 
-    weeksLeft = weekLim #Represents the weeks left at the moment dynamically while scheduling
-    totalClusters = len(clusterList)
+        weeksLeft = weekLim #Represents the weeks left at the moment dynamically while scheduling
+        totalClusters = len(cToProcess)
 
-    reverseGraph = graph.reverse()
+        reverseGraph = graph.reverse()
 
-    weekNo = 0 
-    for week in weeks:
+        weekNo = 0 
+        for week in weeks:
 
-        jLim = maxjPerWeek
-        schJob = list()
+            jLim = maxjPerWeek
+            schJob = list()
 
-        clusterPerWeek = int(totalClusters / weeksLeft)
-        if clusterPerWeek == 0:
-            clusterPerWeek = 1
-        
-        for i in order:
-           
+            clusterPerWeek = int(totalClusters / weeksLeft)
+            if clusterPerWeek == 0:
+                clusterPerWeek = 1
             
-            if preqCounter[i] != -1 and preqCounter[i] == 0 :
-
-                if jLim <= 0 or clusterPerWeek <= 0 or jLim < len(clusterList[i]) :
-                    break
-
-
-                week.extend(clusterList[i])
-                jLim -= len(clusterList[i])
-                preqCounter[i] = -1
-                schJob.append(i)
-                clusterPerWeek -= 1
-                totalClusters -= 1
+            for i in order:
+               
                 
-        for job in schJob:
-            for req in reverseGraph.get_adj()[job]:
-                preqCounter[req] -= 1
-                
-                
-        weekNo += 1            
-        weeksLeft -= 1       
+                if preqCounter[i] != -1 and preqCounter[i] == 0 :
 
-        
-            
+                    if jLim <= 0 or clusterPerWeek <= 0 or jLim < len(clusterList[i]) :
+                        break
+
+
+                    week.extend(clusterList[i])
+                    jLim -= len(clusterList[i])
+                    preqCounter[i] = -1
+                    schJob.append(i)
+                    clusterPerWeek -= 1
+                    totalClusters -= 1
                     
-        
-        
-    print("---Done in %s seconds ---" % (time.time() - start_time))            
+            for job in schJob:
+                for req in reverseGraph.get_adj()[job]:
+                    preqCounter[req] -= 1
+                    
+                    
+            weekNo += 1            
+            weeksLeft -= 1       
 
-
-    '''
-    for week in weeks:
-        print(len(week))
-    '''
-
-    start_time = time.time()
-    print('Writing to network elements..')
-
-    i = 0
-    for week in weeks:
-        for job in week:
-            all_rec[job].updRolloutDate = processInterval[i] 
+            
                 
-        i += 1
+                        
+            
+            
+        print("---Done in %s seconds ---" % (time.time() - start_time))            
 
+
+        '''
+        for week in weeks:
+            print(len(week))
+        '''
+
+        start_time = time.time()
+        print('Writing to network elements..')
+
+        i = 0
+        for week in weeks:
+            for job in week:
+                all_rec[job].updRolloutDate = processInterval[i] 
+                    
+            i += 1
+    else:
+        print('Insufficient funds!! No operation can be done')
+        
     for recom in recommendations:
         if recom.status == 'Approved':
             all_rec.append(recom)
