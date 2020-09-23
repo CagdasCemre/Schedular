@@ -65,32 +65,30 @@ class dataParser:
             
         return  self.all_rec, nCount
         
-    '''
-    def write(self, weekly_plan, startDate):
+   '''
+    def write(recomList):
         # Create a Pandas dataframe from the data.
 
         
-        
-        s = list()
+        date_list = list()
 
-        
-        i = 1
-        for week in weekly_plan:
+        for recom in recomList:
+            if recom.status == 'Optional' and recom.updRolloutDate is not None :
+                date_list.append(recom.updRolloutDate)
 
-            for job in week:
-                self.df.loc[self.indMap[job], 'updRolloutDate'] = f'{startDate[0]}-{i}'
+        num_list = list()
+        for date in date_list:
+            num_list.append(int(date[date.find('-')+1:]))
 
-            if i % 52 == 0:
-                startDate[0] += 1
-                i = 0
-
-            i += 1
+        weekLim = max()
+            
+        df = pd.DataFrame(num_list)
            
         writer = pd.ExcelWriter('RecommendationPlan.xlsx', engine='openpyxl') 
         wb  = writer.book
 
-        self.df.to_excel(writer, index=True)
+        df.to_excel(writer, index=True)
         wb.save('RecommendationPlan.xlsx')
-        '''
+   '''
         
 
